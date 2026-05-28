@@ -56,4 +56,5 @@ class LlamaServerClient:
         try:
             return json.loads(content)
         except json.JSONDecodeError as exc:
-            raise LLMUnavailableError(f"llama-server returned invalid JSON: {content[:200]}") from exc
+            message = f"llama-server returned invalid JSON: {content[:200]}"
+            raise LLMUnavailableError(message) from exc

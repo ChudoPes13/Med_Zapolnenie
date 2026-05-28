@@ -3,8 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from app.services.llm import LLMUnavailableError, LlamaServerClient
-
+from app.services.llm import LlamaServerClient, LLMUnavailableError
 
 TOOTH_RE = re.compile(r"\b([1-4][1-8]|[5-8][1-5])\b")
 EOD_RE = re.compile(r"(?:эод|eod)\D{0,12}(\d{1,3})", re.IGNORECASE)

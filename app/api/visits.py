@@ -10,7 +10,14 @@ from app.api.deps import processor
 from app.core.config import get_settings
 from app.db.models import AuditEvent, DoctorConfirmation, ExportRecord
 from app.db.session import get_session
-from app.schemas import ConfirmationIn, ExportResponse, TranscriptIn, VisitCreate, VisitOut, VisitState
+from app.schemas import (
+    ConfirmationIn,
+    ExportResponse,
+    TranscriptIn,
+    VisitCreate,
+    VisitOut,
+    VisitState,
+)
 from app.services.exporter import (
     export_1c_text,
     export_docx_bytes,
@@ -107,7 +114,11 @@ def export_docx(visit_id: str, session: Session = Depends(get_session)) -> Respo
         raise HTTPException(status_code=409, detail="doctor confirmation required before export")
 
     emk = visit_to_out(visit).emk
-    body = export_docx_bytes(emk, current_findings(session, visit_id), current_evidence(session, visit_id))
+    body = export_docx_bytes(
+        emk,
+        current_findings(session, visit_id),
+        current_evidence(session, visit_id),
+    )
     settings = get_settings()
     settings.export_dir.mkdir(parents=True, exist_ok=True)
     out_path = Path(settings.export_dir) / f"{visit_id}.docx"
@@ -132,7 +143,10 @@ def export_docx(visit_id: str, session: Session = Depends(get_session)) -> Respo
 @router.get("/{visit_id}/exports/docx-base64")
 def export_docx_base64(visit_id: str, session: Session = Depends(get_session)) -> dict[str, str]:
     response = export_docx(visit_id, session)
-    return {"filename": f"{visit_id}.docx", "content_base64": base64.b64encode(response.body).decode()}
+    return {
+        "filename": f"{visit_id}.docx",
+        "content_base64": base64.b64encode(response.body).decode(),
+    }
 
 
 @router.get("/{visit_id}/exports/{export_type}", response_model=ExportResponse)
@@ -161,7 +175,9 @@ def export_text(
             payload={"filename": filename, "media_type": media_type},
         )
     )
-    session.add(AuditEvent(visit_id=visit_id, action="export.created", payload={"type": export_type}))
+    session.add(
+        AuditEvent(visit_id=visit_id, action="export.created", payload={"type": export_type})
+    )
     session.commit()
     return ExportResponse(
         export_type=export_type,

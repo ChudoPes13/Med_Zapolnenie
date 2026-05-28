@@ -31,7 +31,9 @@ async def audio_ws(websocket: WebSocket, visit_id: str) -> None:
                             str(payload.get("text", "")),
                             "demo",
                         )
-                    await websocket.send_json({"type": "state", "state": state.model_dump(mode="json")})
+                    await websocket.send_json(
+                        {"type": "state", "state": state.model_dump(mode="json")}
+                    )
                 continue
 
             frame = message.get("bytes")

@@ -26,7 +26,8 @@ def export_json_package(emk: EMK, findings: list[FindingOut], evidence: list[Evi
 
 def export_html(emk: EMK, findings: list[FindingOut], evidence: list[EvidenceOut]) -> str:
     rows = "".join(
-        f"<li><strong>{item.title}</strong>: {item.message} [{item.status}]</li>" for item in findings
+        f"<li><strong>{item.title}</strong>: {item.message} [{item.status}]</li>"
+        for item in findings
     )
     ev_rows = "".join(
         f"<li>{item.kr_id}, {item.section}: {item.fragment}</li>" for item in evidence
@@ -90,7 +91,10 @@ def export_docx_bytes(emk: EMK, findings: list[FindingOut], evidence: list[Evide
         document.add_paragraph(f"{item.title}: {item.message} [{item.status}]", style="List Bullet")
     document.add_heading("КР Минздрава", level=1)
     for item in evidence:
-        document.add_paragraph(f"{item.kr_id} / {item.section}: {item.fragment}", style="List Bullet")
+        document.add_paragraph(
+            f"{item.kr_id} / {item.section}: {item.fragment}",
+            style="List Bullet",
+        )
 
     output = BytesIO()
     document.save(output)

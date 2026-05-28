@@ -134,7 +134,13 @@ class VisitProcessor:
         self.extractor = extractor or ClinicalExtractor()
         self.guidelines = guidelines or StubGuidelinesProvider()
 
-    async def process_text(self, session: Session, visit_id: str, text: str, source: str) -> VisitState:
+    async def process_text(
+        self,
+        session: Session,
+        visit_id: str,
+        text: str,
+        source: str,
+    ) -> VisitState:
         visit = get_visit_or_raise(session, visit_id)
         session.add(TranscriptSegment(visit_id=visit_id, text=text.strip(), source=source))
 

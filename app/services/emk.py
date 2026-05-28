@@ -40,7 +40,9 @@ def apply_emk_patch(current: dict[str, Any], patch: dict[str, Any]) -> dict[str,
 
     dental_patch = patch.get("dental") or {}
     if isinstance(dental_patch, dict):
-        emk["dental"].update({key: value for key, value in dental_patch.items() if value is not None})
+        emk["dental"].update(
+            {key: value for key, value in dental_patch.items() if value is not None}
+        )
 
     diagnosis_patch = patch.get("diagnosis") or {}
     if isinstance(diagnosis_patch, dict):

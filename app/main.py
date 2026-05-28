@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,7 +15,15 @@ from app.db.session import init_db
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    assert_gpu_ready(required=settings.gpu_required)
+    init_db()
+    yield
+
+
+app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
@@ -23,13 +34,6 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(visits_router)
 app.include_router(ws_router)
-
-
-@app.on_event("startup")
-def startup() -> None:
-    assert_gpu_ready(required=settings.gpu_required)
-    init_db()
-
 
 @app.get("/")
 def root() -> dict[str, str]:
