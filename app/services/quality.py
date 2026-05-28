@@ -10,12 +10,14 @@ def _finding(
     message: str,
     section: str,
     ok: bool = False,
+    ok_title: str | None = None,
+    ok_message: str | None = None,
 ) -> FindingOut:
     return FindingOut(
         code=code,
         severity="ok" if ok else severity,  # type: ignore[arg-type]
-        title=title,
-        message=message,
+        title=ok_title if ok and ok_title else title,
+        message=ok_message if ok and ok_message else message,
         section=section,
         status="resolved" if ok else "open",
     )
@@ -32,6 +34,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Для 043/у нужно зафиксировать жалобы пациента.",
             "complaints",
             ok=bool(emk.complaints),
+            ok_title="Жалобы заполнены",
+            ok_message="В карте есть структурированные жалобы пациента.",
         )
     )
     findings.append(
@@ -42,6 +46,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Укажите номер зуба в системе FDI, например 36.",
             "objective",
             ok=bool(emk.dental.tooth_fdi),
+            ok_title="Зуб FDI указан",
+            ok_message=f"Зуб {emk.dental.tooth_fdi} зафиксирован в стоматологическом статусе.",
         )
     )
     findings.append(
@@ -52,6 +58,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Отметьте состояние зуба и соседних тканей в одонтограмме.",
             "objective",
             ok=emk.dental.odontogram_done,
+            ok_title="Одонтограмма заполнена",
+            ok_message="Стоматологический статус содержит отметку одонтограммы.",
         )
     )
     findings.append(
@@ -62,6 +70,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Для дифференциальной диагностики зафиксируйте перкуссию.",
             "objective",
             ok=bool(emk.dental.percussion),
+            ok_title="Перкуссия зафиксирована",
+            ok_message=f"Перкуссия: {emk.dental.percussion}.",
         )
     )
     findings.append(
@@ -72,6 +82,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Добавьте реакцию на холодовую или тепловую пробу.",
             "objective",
             ok=bool(emk.dental.thermal_test),
+            ok_title="Термопроба зафиксирована",
+            ok_message=f"Термопроба: {emk.dental.thermal_test}.",
         )
     )
     findings.append(
@@ -82,6 +94,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Укажите ЭОД в мкА, если проба выполнена.",
             "objective",
             ok=emk.dental.eod_mka is not None,
+            ok_title="ЭОД зафиксирован",
+            ok_message=f"ЭОД: {emk.dental.eod_mka} мкА.",
         )
     )
     findings.append(
@@ -92,6 +106,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Перед назначениями нужно зафиксировать аллергоанамнез.",
             "anamnesis",
             ok=bool(emk.allergy),
+            ok_title="Аллергоанамнез уточнен",
+            ok_message=f"Аллергия: {emk.allergy}.",
         )
     )
     findings.append(
@@ -102,6 +118,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Зафиксируйте артериальное давление до вмешательства.",
             "objective",
             ok=bool(emk.blood_pressure),
+            ok_title="АД зафиксировано",
+            ok_message=f"АД: {emk.blood_pressure}.",
         )
     )
     findings.append(
@@ -112,6 +130,8 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
             "Подтвердите или измените диагноз перед подписью.",
             "diagnosis",
             ok=bool(emk.diagnosis.code and emk.diagnosis.confirmed),
+            ok_title="МКБ подтвержден",
+            ok_message=f"Подтвержден диагноз {emk.diagnosis.code} {emk.diagnosis.title or ''}.",
         )
     )
 
@@ -125,6 +145,10 @@ def check_emk_quality(emk: EMK) -> list[FindingOut]:
                 f"Для '{prescription.name}' нужны дозировка, кратность и длительность.",
                 "prescriptions",
                 ok=ok,
+                ok_title="Назначение заполнено",
+                ok_message=(
+                    f"Для '{prescription.name}' указаны дозировка, кратность и длительность."
+                ),
             )
         )
 
