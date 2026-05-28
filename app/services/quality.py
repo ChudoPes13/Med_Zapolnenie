@@ -63,7 +63,7 @@ def check_emk_quality(emk: EMK, final: bool = False) -> list[FindingOut]:
             "complaints.required",
             "critical",
             "Жалобы не заполнены",
-            "Для 043/у нужно зафиксировать жалобы пациента.",
+            "Для приема нужно зафиксировать жалобы пациента.",
             "complaints",
             ok=bool(emk.complaints),
             ok_title="Жалобы заполнены",

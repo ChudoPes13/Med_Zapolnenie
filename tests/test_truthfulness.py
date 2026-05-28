@@ -10,6 +10,22 @@ from app.services.quality import check_emk_quality
     ("text", "expected"),
     [
         (
+            "Пациента зовут Мастеров Александр Владимирович, жалуются на боли в животе.",
+            {
+                "focus": "general",
+                "tooth": None,
+                "complaint": "Боли в животе",
+            },
+        ),
+        (
+            "Ну ладно. Привет! Как меня слышно? медленно.",
+            {
+                "focus": "general",
+                "tooth": None,
+                "complaint_count": 0,
+            },
+        ),
+        (
             "У пациента боль в нижних конечностях. Ему 17 лет.",
             {
                 "focus": "lower_limb",
@@ -93,6 +109,10 @@ def test_synthetic_dialogue_truthfulness(text, expected):
         assert parsed.dental.eod_mka == expected["eod"]
     if "diagnosis" in expected:
         assert parsed.diagnosis.code == expected["diagnosis"]
+    if "complaint" in expected:
+        assert expected["complaint"] in parsed.complaints
+    if "complaint_count" in expected:
+        assert len(parsed.complaints) == expected["complaint_count"]
 
 
 def test_lower_limb_quality_is_profile_specific_and_has_no_dental_required_fields():

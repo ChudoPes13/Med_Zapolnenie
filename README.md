@@ -17,3 +17,5 @@ Backend: http://127.0.0.1:8000
 Frontend: http://127.0.0.1:5173
 
 Сервис рассчитан на Windows 11, RTX 3070 8GB, Python 3.12, CUDA 13.x и локальный `llama-server`.
+
+Правила обработки диалогов: [docs/DIALOG_PROCESSING.md](docs/DIALOG_PROCESSING.md)

@@ -12,6 +12,7 @@ Greenfield MVP scaffolded in `C:\ai26\Med_Zapolnenie`:
 - Quality checker for profile-specific lower-limb and dental requirements.
 - React/Vite UI with AudioWorklet PCM streaming.
 - UI map in `docs/UI_MAP.md`.
+- Dialogue processing rules and scenario comparison in `docs/DIALOG_PROCESSING.md`.
 - JSON/HTML/1C/DOCX exports after doctor confirmation.
 
 ## Commands

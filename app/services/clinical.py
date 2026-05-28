@@ -9,6 +9,19 @@ TOOTH_RE = re.compile(r"\b([1-4][1-8]|[5-8][1-5])\b")
 AGE_RE = re.compile(r"\b(\d{1,3})\s*(?:год|года|лет)\b", re.IGNORECASE)
 EOD_RE = re.compile(r"(?:эод|eod)\D{0,12}(\d{1,3})", re.IGNORECASE)
 BP_RE = re.compile(r"\b(1\d{2}|[8-9]\d)\s*/\s*(\d{2,3})\b")
+COMPLAINT_AFTER_NA_RE = re.compile(
+    r"(?:жал\w*|жалоб\w*)\s+на\s+([^.;\n]+)",
+    re.IGNORECASE,
+)
+PAIN_RE = re.compile(r"\b(?:боль|боли|болит|болят|болезненн\w*)\b", re.IGNORECASE)
+FILLER_WORDS = (
+    "слышно",
+    "привет",
+    "спасибо",
+    "ладно",
+    "медленно",
+    "проверка",
+)
 DENTAL_WORDS = (
     "зуб",
     "зуба",
@@ -66,6 +79,40 @@ def _extract_tooth(text: str) -> str | None:
     if match := re.search(r"(?:зуб|fdi)\D{0,8}([1-4][1-8]|[5-8][1-5])\b", low):
         return match.group(1)
     return None
+
+
+def _is_filler(text: str) -> bool:
+    low = text.casefold().strip()
+    if len(low) <= 3:
+        return True
+    return any(word in low for word in FILLER_WORDS) and not PAIN_RE.search(low)
+
+
+def _clean_complaint(value: str) -> str:
+    clean = value.strip(" .,:;!?-")
+    if not clean:
+        return ""
+    return clean[0].upper() + clean[1:]
+
+
+def deterministic_general_patch(text: str) -> dict[str, Any]:
+    patch: dict[str, Any] = {}
+    if age := _extract_age(text):
+        patch["age_years"] = age
+    if _is_filler(text):
+        return patch
+
+    complaints: list[str] = []
+    if match := COMPLAINT_AFTER_NA_RE.search(text):
+        complaint = _clean_complaint(match.group(1))
+        if complaint:
+            complaints.append(complaint)
+    elif PAIN_RE.search(text):
+        complaints.append(_clean_complaint(text))
+
+    if complaints:
+        patch["complaints"] = complaints
+    return patch
 
 
 def deterministic_dental_patch(text: str) -> dict[str, Any]:
@@ -247,7 +294,9 @@ def deterministic_lower_limb_patch(text: str) -> dict[str, Any]:
 
 
 def deterministic_clinical_patch(text: str) -> dict[str, Any]:
-    patch = deterministic_lower_limb_patch(text)
+    patch = deterministic_general_patch(text)
+    lower_limb_patch = deterministic_lower_limb_patch(text)
+    patch = _deep_merge(patch, lower_limb_patch)
     dental_patch = deterministic_dental_patch(text)
     return _deep_merge(patch, dental_patch)
 
