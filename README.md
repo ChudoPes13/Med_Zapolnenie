@@ -6,6 +6,8 @@
 
 ```powershell
 scripts\setup.ps1
+scripts\download_model.ps1 -Profile qwen3-4b
+scripts\download_asr.ps1
 scripts\start_llama.ps1
 scripts\start_backend.ps1
 scripts\start_frontend.ps1

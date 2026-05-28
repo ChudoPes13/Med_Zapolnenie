@@ -14,6 +14,7 @@
 ```powershell
 scripts\setup.ps1
 scripts\download_model.ps1 -Profile qwen3-4b
+scripts\download_asr.ps1
 ```
 
 `setup.ps1` creates `.venv`, installs PyTorch CUDA 13.0 wheels, backend dependencies, and frontend packages.
@@ -34,6 +35,7 @@ Then open http://127.0.0.1:5173.
 
 ```powershell
 scripts\gpu_health.ps1
+scripts\model_check.ps1
 Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
@@ -50,6 +52,7 @@ Backend startup uses `MEDJARVIS_GPU_REQUIRED=1` by default in `scripts\start_bac
 ## Production Notes
 
 - Keep model files in `models/`; they are gitignored.
+- Faster-Whisper maps `large-v3-turbo` to `mobiuslabsgmbh/faster-whisper-large-v3-turbo`.
 - SQLite runtime DB lives in `data/medjarvis.db`; it is gitignored.
 - The KR provider is a stub for v1. Replace it by implementing `GuidelinesProvider.search()`.
 - `Qwen3-4B-Q4_K_M.gguf` is the realtime default. Use `Qwen3-8B-Q4_K_M.gguf` only when ASR is not competing for VRAM or after local benchmarks.

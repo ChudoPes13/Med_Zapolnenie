@@ -18,6 +18,7 @@ Greenfield MVP scaffolded in `C:\ai26\Med_Zapolnenie`:
 ```powershell
 scripts\setup.ps1
 scripts\download_model.ps1 -Profile qwen3-4b
+scripts\download_asr.ps1
 scripts\start_llama.ps1
 scripts\start_backend.ps1
 scripts\start_frontend.ps1
@@ -36,7 +37,7 @@ npm run build
 
 - Real KR database is not connected yet; provider returns visible stubs.
 - `llama-server` model must be downloaded before LLM extraction is live.
-- ASR model download and first load can take time and VRAM.
+- ASR model download and first load can take time and VRAM; use `scripts\download_asr.ps1`.
 - Browser AudioContext sample rate is requested as 16 kHz; verify target Chrome honors it on the workstation.
 
 ## Next Chat Checklist
