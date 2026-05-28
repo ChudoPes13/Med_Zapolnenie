@@ -13,6 +13,7 @@ Greenfield MVP scaffolded in `C:\ai26\Med_Zapolnenie`:
 - React/Vite UI with AudioWorklet PCM streaming.
 - UI map in `docs/UI_MAP.md`.
 - Dialogue processing rules and scenario comparison in `docs/DIALOG_PROCESSING.md`.
+- Detailed new-chat project context in `docs/NEXT_CHAT_CONTEXT.md`.
 - JSON/HTML/1C/DOCX exports after doctor confirmation.
 
 ## Commands
@@ -47,12 +48,13 @@ npm run build
 - The UI no longer seeds dental text by default; `НК пример` is an explicit manual test helper.
 - `llama-server` model must be downloaded before LLM extraction is live.
 - `scripts\start_backend.ps1` now requires LLM by default; use `MEDJARVIS_REQUIRE_LLM=0` only for tests or deterministic debugging.
+- ASR settings are configurable through `MEDJARVIS_ASR_*`; current defaults include medical `initial_prompt`, `hotwords`, `beam_size=1`, `best_of=1`, and startup preload in `scripts\start_backend.ps1`.
 - ASR model download and first load can take time and VRAM; use `scripts\download_asr.ps1`.
 - Browser AudioContext sample rate is requested as 16 kHz; verify target Chrome honors it on the workstation.
 
 ## Next Chat Checklist
 
-1. Read this file and `AGENTS.md`.
+1. Read `docs/NEXT_CHAT_CONTEXT.md`, this file, and `AGENTS.md`.
 2. Run `git status --short --branch`.
 3. Run tests and frontend build.
 4. Check `/api/health` with backend and llama-server running.

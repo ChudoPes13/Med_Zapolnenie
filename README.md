@@ -18,3 +18,5 @@ Frontend: http://127.0.0.1:5173
 `scripts\start_medjarvis.ps1 -Restart` поднимает `llama-server`, backend и frontend; после изменения кода используйте `-Restart`, чтобы не остался старый backend на 8000.
 
 Правила обработки диалогов: [docs/DIALOG_PROCESSING.md](docs/DIALOG_PROCESSING.md)
+
+Контекст для продолжения в новом чате: [docs/NEXT_CHAT_CONTEXT.md](docs/NEXT_CHAT_CONTEXT.md)

@@ -39,8 +39,12 @@ class FasterWhisperASR:
         segments, _info = self._model.transcribe(
             audio,
             language=self.settings.asr_language,
-            beam_size=1,
+            beam_size=self.settings.asr_beam_size,
+            best_of=self.settings.asr_best_of,
+            temperature=self.settings.asr_temperature,
             vad_filter=False,
-            condition_on_previous_text=False,
+            condition_on_previous_text=self.settings.asr_condition_on_previous_text,
+            initial_prompt=self.settings.asr_initial_prompt or None,
+            hotwords=self.settings.asr_hotwords or None,
         )
         return " ".join(segment.text.strip() for segment in segments).strip()

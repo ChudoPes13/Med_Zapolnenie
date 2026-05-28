@@ -23,6 +23,21 @@ function Get-ListenerPid {
   return $null
 }
 
+function Stop-ProcessTree {
+  param([int]$RootPid)
+
+  $children = Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $RootPid }
+  foreach ($child in $children) {
+    Stop-ProcessTree -RootPid ([int]$child.ProcessId)
+  }
+
+  try {
+    Stop-Process -Id $RootPid -Force -ErrorAction Stop
+  } catch {
+    # Uvicorn reload parents can disappear while children are still alive.
+  }
+}
+
 function Stop-PortIfRequested {
   param(
     [int]$Port,
@@ -38,7 +53,7 @@ function Stop-PortIfRequested {
     return
   }
   Write-Host "Stopping $Name on port $Port (PID $listenerPid)"
-  Stop-Process -Id $listenerPid -Force
+  Stop-ProcessTree -RootPid $listenerPid
   Start-Sleep -Seconds 1
 }
 

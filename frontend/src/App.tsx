@@ -166,6 +166,12 @@ export function App() {
     ws.onmessage = (event) => {
       const payload = JSON.parse(event.data);
       if (payload.type === "state") setState(payload.state);
+      if (payload.type === "transcript_segment" && payload.text) {
+        setState((previous) => previous ? {
+          ...previous,
+          transcript: [...previous.transcript, payload.text]
+        } : previous);
+      }
       if (payload.type === "segment_checked") setState(payload.state);
       if (payload.type === "recording_finalized") setState(payload.state);
       if (payload.type === "transcribing") setSocketStatus("transcribing");

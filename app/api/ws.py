@@ -4,6 +4,7 @@ import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlmodel import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.api.deps import asr, processor
 from app.db.session import engine
@@ -54,7 +55,11 @@ async def audio_ws(websocket: WebSocket, visit_id: str) -> None:
             if event.speech_ended:
                 utterance = vad.pop_utterance()
                 await websocket.send_json({"type": "transcribing"})
-                text = asr.transcribe_pcm16(utterance)
+                text = await run_in_threadpool(asr.transcribe_pcm16, utterance)
+                if not text:
+                    await websocket.send_json({"type": "segment_empty"})
+                    continue
+                await websocket.send_json({"type": "transcript_segment", "text": text})
                 with Session(engine) as session:
                     state = await processor.process_text(session, visit_id, text, "asr")
                 await websocket.send_json(

@@ -5,7 +5,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
+from app.api.deps import asr
 from app.api.health import router as health_router
 from app.api.visits import router as visits_router
 from app.api.ws import router as ws_router
@@ -25,6 +27,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             "MEDJARVIS_REQUIRE_LLM=1, but llama-server is unavailable at "
             f"{settings.llama_server_url}. Start scripts\\start_llama.ps1 first."
         )
+    if settings.asr_preload:
+        await run_in_threadpool(asr.load)
     init_db()
     yield
 

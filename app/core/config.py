@@ -18,6 +18,21 @@ class Settings(BaseSettings):
     asr_language: str = "ru"
     asr_compute_type: str = "int8_float16"
     asr_device: str = "cuda"
+    asr_preload: bool = True
+    asr_beam_size: int = 1
+    asr_best_of: int = 1
+    asr_temperature: float = 0.0
+    asr_condition_on_previous_text: bool = False
+    asr_initial_prompt: str = (
+        "Медицинский прием на русском языке. Термины: жалобы, анамнез, объективно, "
+        "диагноз, МКБ-10, артериальное давление, аллергия, стоматология, зуб, FDI, "
+        "одонтограмма, перкуссия, термопроба, ЭОД, нижние конечности, стопа, голень, "
+        "отек, пульс."
+    )
+    asr_hotwords: str | None = (
+        "жалобы анамнез объективно диагноз МКБ аллергия давление стоматология зуб FDI "
+        "одонтограмма перкуссия термопроба ЭОД нижние конечности стопа голень отек пульс"
+    )
 
     pcm_sample_rate: int = 16000
     pcm_channels: int = 1

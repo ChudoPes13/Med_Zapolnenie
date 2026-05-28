@@ -118,5 +118,12 @@ export interface HealthStatus {
     language: string;
     compute_type: string;
     device: string;
+    preload: boolean;
+    beam_size: number;
+    best_of: number;
+    temperature: number;
+    condition_on_previous_text: boolean;
+    initial_prompt_set: boolean;
+    hotwords_set: boolean;
   };
 }

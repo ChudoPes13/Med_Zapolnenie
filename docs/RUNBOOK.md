@@ -50,7 +50,25 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 
 Backend startup uses `MEDJARVIS_GPU_REQUIRED=1` by default in `scripts\start_backend.ps1`.
 Backend startup also uses `MEDJARVIS_REQUIRE_LLM=1`; if `llama-server` is not reachable at `http://127.0.0.1:8080/v1`, FastAPI fails on startup instead of silently running without LLM.
+Backend startup preloads Faster-Whisper with `MEDJARVIS_ASR_PRELOAD=true` so the first dictated segment does not pay model load time.
 For tests only, set `MEDJARVIS_REQUIRE_LLM=0`.
+
+## ASR Tuning
+
+Current Faster-Whisper decode settings are configured in `app\core\config.py` and can be overridden through `MEDJARVIS_ASR_*` environment variables:
+
+- `ASR_MODEL=large-v3-turbo`
+- `ASR_LANGUAGE=ru`
+- `ASR_DEVICE=cuda`
+- `ASR_COMPUTE_TYPE=int8_float16`
+- `ASR_BEAM_SIZE=1`
+- `ASR_BEST_OF=1`
+- `ASR_TEMPERATURE=0.0`
+- `ASR_CONDITION_ON_PREVIOUS_TEXT=false`
+- `ASR_INITIAL_PROMPT` contains a Russian medical-context prompt.
+- `ASR_HOTWORDS` contains EMK, dental, and lower-limb terms.
+
+Keep `beam_size=1` and `best_of=1` for realtime latency. Raise them only for offline quality benchmarking.
 
 ## Lower-Limb Acceptance Scenario
 

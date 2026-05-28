@@ -39,5 +39,12 @@ async def health() -> dict[str, object]:
             "language": settings.asr_language,
             "compute_type": settings.asr_compute_type,
             "device": settings.asr_device,
+            "preload": settings.asr_preload,
+            "beam_size": settings.asr_beam_size,
+            "best_of": settings.asr_best_of,
+            "temperature": settings.asr_temperature,
+            "condition_on_previous_text": settings.asr_condition_on_previous_text,
+            "initial_prompt_set": bool(settings.asr_initial_prompt),
+            "hotwords_set": bool(settings.asr_hotwords),
         },
     }

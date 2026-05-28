@@ -94,6 +94,7 @@ Current synthetic coverage after the profile-aware fix:
 
 | Test Group | Count | Purpose |
 |---|---:|---|
+| ASR configuration | 1 | Medical prompt, hotwords, and fast decode options are passed to Faster-Whisper |
 | API lifecycle | 2 | Visit creation, segment processing, confirmation, export, finalize |
 | Dialogue processing API | 1 | Segment-level complaint extraction, filler filtering, final summary |
 | Synthetic truthfulness extraction | 8 | General, lower-limb, dental, age-vs-FDI, shoe-size-vs-FDI |
@@ -101,7 +102,7 @@ Current synthetic coverage after the profile-aware fix:
 | Dental acceptance quality | 1 | Core dental findings turn resolved after required facts arrive |
 | VAD state machine | 1 | Speech start/end behavior |
 | Export/guidelines | 1 | Stub evidence and export content |
-| Total pytest cases | 18 | Regression suite for current MVP behavior |
+| Total pytest cases | 19 | Regression suite for current MVP behavior |
 
 Truthfulness cases covered:
 
