@@ -10,7 +10,7 @@ import {
   Stethoscope,
   ClipboardCheck
 } from "lucide-react";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   addTranscript,
   confirmVisit,
@@ -18,13 +18,20 @@ import {
   docxUrl,
   exportText,
   finalizeVisit,
+  getHealth,
   wsUrl
 } from "./lib/api";
-import type { ExportText, Finding, VisitState } from "./types";
+import type { ExportText, Finding, HealthStatus, VisitState } from "./types";
 
 function severityClass(finding: Finding): string {
   if (finding.status === "resolved") return "ok";
   return finding.severity;
+}
+
+function servicePillClass(ok: boolean | undefined, required = true): string {
+  if (ok === undefined) return "pill neutral";
+  if (ok) return "pill ok";
+  return required ? "pill critical" : "pill warning";
 }
 
 const lowerLimbDemo = "У пациента боль в нижних конечностях, правая голень отечна, стопа холодная. Ему 17 лет.";
@@ -36,6 +43,7 @@ export function App() {
   const [recording, setRecording] = useState(false);
   const [socketStatus, setSocketStatus] = useState("offline");
   const [exported, setExported] = useState<ExportText | null>(null);
+  const [health, setHealth] = useState<HealthStatus | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -45,6 +53,24 @@ export function App() {
     [state]
   );
   const criticalCount = openFindings.filter((item) => item.severity === "critical").length;
+
+  useEffect(() => {
+    let alive = true;
+    async function refreshHealth() {
+      try {
+        const next = await getHealth();
+        if (alive) setHealth(next);
+      } catch {
+        if (alive) setHealth(null);
+      }
+    }
+    void refreshHealth();
+    const timer = window.setInterval(refreshHealth, 5000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   async function ensureVisit(): Promise<VisitState> {
     if (state) return state;
@@ -170,6 +196,12 @@ export function App() {
           </span>
           <span className={criticalCount ? "pill critical" : "pill ok"}>
             {criticalCount ? `${criticalCount} крит.` : "крит. нет"}
+          </span>
+          <span className={servicePillClass(health?.gpu.ok)} title={health?.gpu.name ?? health?.gpu.reason ?? "GPU status"}>
+            GPU {health ? (health.gpu.ok ? "online" : "unknown") : "unknown"}
+          </span>
+          <span className={servicePillClass(health?.llm.ok, health?.llm.required ?? false)} title={health?.llm.url ?? "LLM status"}>
+            LLM {health ? (health.llm.ok ? "online" : "offline") : "unknown"}
           </span>
           <span className="pill neutral">WS {socketStatus}</span>
         </div>

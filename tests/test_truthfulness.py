@@ -150,3 +150,35 @@ async def test_llm_hallucinated_dental_patch_is_removed_without_dental_context()
     assert patch["age_years"] == 17
     assert "dental" not in patch
     assert "diagnosis" not in patch
+
+
+class NonObjectLLM:
+    async def extract_json(self, _text, _current_emk):
+        return ["complaints", "боль", "invalid-patch"]
+
+
+@pytest.mark.asyncio
+async def test_llm_non_object_json_is_ignored_without_breaking_rules():
+    extractor = ClinicalExtractor(llm=NonObjectLLM())
+    patch = await extractor.extract_patch(
+        "жалуется на боли в передней челюсти.",
+        initial_emk(),
+    )
+
+    assert patch["complaints"] == ["Боли в передней челюсти"]
+
+
+class LowercaseComplaintLLM:
+    async def extract_json(self, _text, _current_emk):
+        return {"complaints": ["боли в животе"]}
+
+
+@pytest.mark.asyncio
+async def test_rule_normalized_complaint_takes_precedence_over_llm_variant():
+    extractor = ClinicalExtractor(llm=LowercaseComplaintLLM())
+    patch = await extractor.extract_patch(
+        "пациент жалуется на боли в животе",
+        initial_emk(),
+    )
+
+    assert patch["complaints"][0] == "Боли в животе"

@@ -26,6 +26,12 @@ scripts\start_backend.ps1
 scripts\start_frontend.ps1
 ```
 
+Preferred after local code changes:
+
+```powershell
+scripts\start_medjarvis.ps1 -Restart
+```
+
 Tests:
 
 ```powershell
@@ -40,6 +46,7 @@ npm run build
 - Real KR database is not connected yet; provider returns visible stubs.
 - The UI no longer seeds dental text by default; `НК пример` is an explicit manual test helper.
 - `llama-server` model must be downloaded before LLM extraction is live.
+- `scripts\start_backend.ps1` now requires LLM by default; use `MEDJARVIS_REQUIRE_LLM=0` only for tests or deterministic debugging.
 - ASR model download and first load can take time and VRAM; use `scripts\download_asr.ps1`.
 - Browser AudioContext sample rate is requested as 16 kHz; verify target Chrome honors it on the workstation.
 

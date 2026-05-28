@@ -1,4 +1,4 @@
-import type { ExportText, Visit, VisitState } from "../types";
+import type { ExportText, HealthStatus, Visit, VisitState } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
@@ -56,6 +56,10 @@ export async function finalizeVisit(visitId: string): Promise<VisitState> {
 
 export async function exportText(visitId: string, exportType: "json" | "html" | "1c"): Promise<ExportText> {
   return parse<ExportText>(await fetch(`${API_BASE}/api/visits/${visitId}/exports/${exportType}`));
+}
+
+export async function getHealth(): Promise<HealthStatus> {
+  return parse<HealthStatus>(await fetch(`${API_BASE}/api/health`));
 }
 
 export function docxUrl(visitId: string): string {

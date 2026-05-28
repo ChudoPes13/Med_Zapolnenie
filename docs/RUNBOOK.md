@@ -21,7 +21,16 @@ scripts\download_asr.ps1
 
 ## Start
 
-Open three PowerShell terminals:
+Recommended single command:
+
+```powershell
+scripts\start_medjarvis.ps1 -Restart
+```
+
+This starts `llama-server`, backend, and frontend in hidden PowerShell processes and writes logs to `logs\`.
+Use `-Restart` after code changes so an old backend process on port 8000 cannot keep serving stale code.
+
+Manual three-terminal mode is still available:
 
 ```powershell
 scripts\start_llama.ps1
@@ -40,6 +49,8 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 ```
 
 Backend startup uses `MEDJARVIS_GPU_REQUIRED=1` by default in `scripts\start_backend.ps1`.
+Backend startup also uses `MEDJARVIS_REQUIRE_LLM=1`; if `llama-server` is not reachable at `http://127.0.0.1:8080/v1`, FastAPI fails on startup instead of silently running without LLM.
+For tests only, set `MEDJARVIS_REQUIRE_LLM=0`.
 
 ## Lower-Limb Acceptance Scenario
 

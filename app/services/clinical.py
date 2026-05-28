@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.core.config import get_settings
 from app.services.llm import LlamaServerClient, LLMUnavailableError
 
 TOOTH_RE = re.compile(r"\b([1-4][1-8]|[5-8][1-5])\b")
@@ -341,13 +342,32 @@ def sanitize_patch_for_context(
 
 class ClinicalExtractor:
     def __init__(self, llm: LlamaServerClient | None = None) -> None:
+        provided_llm = llm is not None
         self.llm = llm or LlamaServerClient()
+        self.llm_enabled = provided_llm or get_settings().require_llm
 
     async def extract_patch(self, text: str, current_emk: dict[str, Any]) -> dict[str, Any]:
         rule_patch = deterministic_clinical_patch(text)
+        if not self.llm_enabled:
+            return rule_patch
         try:
             llm_patch = await self.llm.extract_json(text, current_emk)
         except LLMUnavailableError:
             return rule_patch
+        if not isinstance(llm_patch, dict):
+            return rule_patch
         llm_patch = sanitize_patch_for_context(llm_patch, text, current_emk)
-        return _deep_merge(llm_patch, rule_patch)
+        merged = _deep_merge(llm_patch, rule_patch)
+        return _prefer_rule_lists(merged, rule_patch)
+
+
+def _prefer_rule_lists(merged: dict[str, Any], rule_patch: dict[str, Any]) -> dict[str, Any]:
+    for key in ("complaints", "anamnesis", "objective", "recommendations"):
+        rule_items = rule_patch.get(key)
+        merged_items = merged.get(key)
+        if not isinstance(rule_items, list) or not isinstance(merged_items, list):
+            continue
+        seen = {str(item).casefold() for item in rule_items}
+        tail = [item for item in merged_items if str(item).casefold() not in seen]
+        merged[key] = [*rule_items, *tail]
+    return merged

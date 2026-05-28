@@ -97,11 +97,11 @@ Current synthetic coverage after the profile-aware fix:
 | API lifecycle | 2 | Visit creation, segment processing, confirmation, export, finalize |
 | Dialogue processing API | 1 | Segment-level complaint extraction, filler filtering, final summary |
 | Synthetic truthfulness extraction | 8 | General, lower-limb, dental, age-vs-FDI, shoe-size-vs-FDI |
-| Truthfulness guards | 2 | Profile-specific findings without dental leakage, LLM hallucination guard |
+| Truthfulness guards | 4 | Profile-specific findings, LLM hallucination guard, non-object LLM output, rule precedence over LLM variants |
 | Dental acceptance quality | 1 | Core dental findings turn resolved after required facts arrive |
 | VAD state machine | 1 | Speech start/end behavior |
 | Export/guidelines | 1 | Stub evidence and export content |
-| Total pytest cases | 16 | Regression suite for current MVP behavior |
+| Total pytest cases | 18 | Regression suite for current MVP behavior |
 
 Truthfulness cases covered:
 
@@ -115,6 +115,8 @@ Truthfulness cases covered:
 | explicit `зуб 36` | tooth FDI 36 |
 | lower-limb pulse phrase | lower-limb vascular field filled |
 | LLM proposes tooth without context | dental patch is removed |
+| LLM returns non-object JSON | LLM patch is ignored, deterministic extraction remains live |
+| LLM returns lowercase duplicate complaint | normalized rule complaint stays first |
 
 ## Improvement Backlog
 

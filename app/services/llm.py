@@ -52,9 +52,15 @@ class LlamaServerClient:
         except httpx.HTTPError as exc:
             raise LLMUnavailableError(str(exc)) from exc
 
-        content = response.json()["choices"][0]["message"]["content"]
         try:
-            return json.loads(content)
+            content = response.json()["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMUnavailableError("llama-server returned an unexpected response shape") from exc
+        try:
+            patch = json.loads(content)
         except json.JSONDecodeError as exc:
             message = f"llama-server returned invalid JSON: {content[:200]}"
             raise LLMUnavailableError(message) from exc
+        if not isinstance(patch, dict):
+            raise LLMUnavailableError("llama-server returned JSON that is not an object")
+        return patch

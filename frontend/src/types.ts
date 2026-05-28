@@ -96,3 +96,27 @@ export interface ExportText {
   content: string;
   media_type: string;
 }
+
+export interface HealthStatus {
+  ok: boolean;
+  gpu: {
+    ok: boolean;
+    name?: string;
+    total_mb?: number;
+    free_mb?: number;
+    driver?: string;
+    reason?: string;
+  };
+  llm: {
+    ok: boolean;
+    url: string;
+    model: string;
+    required: boolean;
+  };
+  asr: {
+    model: string;
+    language: string;
+    compute_type: string;
+    device: string;
+  };
+}

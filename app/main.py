@@ -12,6 +12,7 @@ from app.api.ws import router as ws_router
 from app.core.config import get_settings
 from app.core.gpu import assert_gpu_ready
 from app.db.session import init_db
+from app.services.llm import LlamaServerClient
 
 settings = get_settings()
 
@@ -19,6 +20,11 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     assert_gpu_ready(required=settings.gpu_required)
+    if settings.require_llm and not await LlamaServerClient().health():
+        raise RuntimeError(
+            "MEDJARVIS_REQUIRE_LLM=1, but llama-server is unavailable at "
+            f"{settings.llama_server_url}. Start scripts\\start_llama.ps1 first."
+        )
     init_db()
     yield
 
