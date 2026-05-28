@@ -18,6 +18,22 @@ class StubGuidelinesProvider:
 
     def search(self, emk: EMK, query: str) -> list[EvidenceOut]:
         evidence: list[EvidenceOut] = []
+        if emk.clinical_focus == "lower_limb":
+            return [
+                EvidenceOut(
+                    kr_id="KR-STUB-LOWER-LIMB",
+                    title="Заглушка: требуется подключение реальной базы КР/БМ25",
+                    section="Первичная оценка жалоб на нижние конечности",
+                    fragment=(
+                        "Для жалоб на нижние конечности система проверяет локализацию, "
+                        "сосудистый и неврологический статус. Это не официальный источник."
+                    ),
+                    url="stub://kr/lower-limb/triage",
+                    score=0.5,
+                    is_stub=True,
+                )
+            ]
+
         tooth = emk.dental.tooth_fdi
 
         if tooth or "зуб" in query.casefold() or "кариес" in query.casefold():

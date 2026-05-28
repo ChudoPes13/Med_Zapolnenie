@@ -41,13 +41,23 @@ Invoke-RestMethod http://127.0.0.1:8000/api/health
 
 Backend startup uses `MEDJARVIS_GPU_REQUIRED=1` by default in `scripts\start_backend.ps1`.
 
-## Acceptance Scenario
+## Lower-Limb Acceptance Scenario
 
 1. Send: `Болит зуб, нижняя челюсть, боль при накусывании.`
-2. Confirm that complaints fill and red findings include FDI, odontogram, EOD/percussion/thermal, allergy, BP, ICD confirmation.
-3. Send: `Зуб 36, перкуссия отрицательная, ЭОД 8 мкА, аллергии нет, АД 120/80, подтверждаю K02.1 кариес.`
-4. Confirm that FDI, odontogram, percussion, EOD, allergy, BP, and diagnosis confirmation improve quality state.
-5. Press confirm, then export JSON/HTML/1C/DOCX.
+2. The first line above is the old dental demo and should only activate dentistry because it says `зуб`.
+3. Send: `У пациента боль в нижних конечностях. Ему 17 лет.`
+4. Confirm that `17 лет` becomes patient age, not FDI tooth 17, and the dental panel is not shown.
+5. Send: `Правая голень отечна, стопа холодная, пульс на тыльной артерии стопы не определяется.`
+6. Confirm that lower-limb fields fill and profile-specific checks update.
+7. Press `Завершить`; final summary appears and final checks run.
+8. Press confirm, then export JSON/HTML/1C/DOCX.
+
+## Dental Acceptance Scenario
+
+1. Send: `Болит зуб 36, боль при накусывании, ЭОД 8 мкА.`
+2. Confirm that the dental panel appears only because dental context is explicit.
+3. Send allergy, BP, percussion, thermal test, and diagnosis confirmation.
+4. Press `Завершить`, confirm, then export.
 
 ## Production Notes
 

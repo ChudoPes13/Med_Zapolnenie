@@ -235,8 +235,16 @@ textarea {
 }
 
 .empty,
-.diagnosis {
+.diagnosis,
+.summary {
   margin: 0;
+}
+
+.summary {
+  margin-top: 10px;
+  border-top: 1px solid #d8e0e4;
+  padding-top: 10px;
+  color: #32414a;
 }
 
 dl {

@@ -7,10 +7,19 @@ import {
   Mic,
   MicOff,
   ShieldCheck,
-  Stethoscope
+  Stethoscope,
+  ClipboardCheck
 } from "lucide-react";
 import { FormEvent, useMemo, useRef, useState } from "react";
-import { addTranscript, confirmVisit, createVisit, docxUrl, exportText, wsUrl } from "./lib/api";
+import {
+  addTranscript,
+  confirmVisit,
+  createVisit,
+  docxUrl,
+  exportText,
+  finalizeVisit,
+  wsUrl
+} from "./lib/api";
 import type { ExportText, Finding, VisitState } from "./types";
 
 function severityClass(finding: Finding): string {
@@ -18,12 +27,11 @@ function severityClass(finding: Finding): string {
   return finding.severity;
 }
 
-const seed = "Болит зуб, нижняя челюсть, боль при накусывании.";
-const followup = "Зуб 36, перкуссия отрицательная, ЭОД 8 мкА, аллергии нет, АД 120/80, подтверждаю K02.1 кариес.";
+const lowerLimbDemo = "У пациента боль в нижних конечностях, правая голень отечна, стопа холодная. Ему 17 лет.";
 
 export function App() {
   const [state, setState] = useState<VisitState | null>(null);
-  const [draft, setDraft] = useState(seed);
+  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [recording, setRecording] = useState(false);
   const [socketStatus, setSocketStatus] = useState("offline");
@@ -72,6 +80,17 @@ export function App() {
     }
   }
 
+  async function finalize() {
+    const current = await ensureVisit();
+    setBusy(true);
+    try {
+      const next = await finalizeVisit(current.visit.id);
+      setState(next);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function downloadText(type: "json" | "html" | "1c") {
     if (!state) return;
     const payload = await exportText(state.visit.id, type);
@@ -87,6 +106,9 @@ export function App() {
   async function toggleMic() {
     const current = await ensureVisit();
     if (recording) {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: "finalize_recording" }));
+      }
       wsRef.current?.close();
       streamRef.current?.getTracks().forEach((track) => track.stop());
       void audioContextRef.current?.close();
@@ -118,7 +140,8 @@ export function App() {
     ws.onmessage = (event) => {
       const payload = JSON.parse(event.data);
       if (payload.type === "state") setState(payload.state);
-      if (payload.type === "final_transcript") setState(payload.state);
+      if (payload.type === "segment_checked") setState(payload.state);
+      if (payload.type === "recording_finalized") setState(payload.state);
       if (payload.type === "transcribing") setSocketStatus("transcribing");
       if (payload.type === "ready") setSocketStatus("ready");
     };
@@ -138,7 +161,7 @@ export function App() {
           <Stethoscope size={22} />
           <div>
             <h1>МедЖарвис</h1>
-            <span>Стоматология 043/у</span>
+            <span>{focusLabel(emk?.clinical_focus)}</span>
           </div>
         </div>
         <div className="statusline">
@@ -159,10 +182,17 @@ export function App() {
               <button type="button" className="iconButton" title="Микрофон" onClick={toggleMic}>
                 {recording ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
-              <button type="button" onClick={() => setDraft(followup)}>Зуб 36</button>
+              <button type="button" onClick={() => setDraft(lowerLimbDemo)}>НК пример</button>
               <button type="submit" disabled={busy || !draft.trim()}>Отправить</button>
+              <button type="button" onClick={finalize} disabled={busy || !state}>
+                <ClipboardCheck size={16} /> Завершить
+              </button>
             </div>
-            <textarea value={draft} onChange={(event) => setDraft(event.target.value)} />
+            <textarea
+              value={draft}
+              placeholder="Введите или надиктуйте фрагмент приема"
+              onChange={(event) => setDraft(event.target.value)}
+            />
           </form>
 
           <section className="transcript">
@@ -184,21 +214,14 @@ export function App() {
             <EMKBlock title="Жалобы" items={emk?.complaints} />
             <EMKBlock title="Анамнез" items={emk?.anamnesis} fallback={emk?.allergy ? [`Аллергия: ${emk.allergy}`] : []} />
             <EMKBlock title="Объективно" items={emk?.objective} fallback={emk?.blood_pressure ? [`АД: ${emk.blood_pressure}`] : []} />
-            <section className="panel">
-              <h3>Стоматология</h3>
-              <dl>
-                <dt>Зуб FDI</dt><dd>{emk?.dental.tooth_fdi ?? "-"}</dd>
-                <dt>Одонтограмма</dt><dd>{emk?.dental.odontogram_done ? "заполнена" : "-"}</dd>
-                <dt>Перкуссия</dt><dd>{emk?.dental.percussion ?? "-"}</dd>
-                <dt>Термопроба</dt><dd>{emk?.dental.thermal_test ?? "-"}</dd>
-                <dt>ЭОД</dt><dd>{emk?.dental.eod_mka ? `${emk.dental.eod_mka} мкА` : "-"}</dd>
-              </dl>
-            </section>
+            {emk?.clinical_focus === "dental" ? <DentalPanel emk={emk} /> : null}
+            {emk?.clinical_focus === "lower_limb" ? <LowerLimbPanel emk={emk} /> : null}
             <section className="panel wide">
               <h3>Диагноз и рекомендации</h3>
               <p className="diagnosis">{emk?.diagnosis.code ?? "-"} {emk?.diagnosis.title ?? ""}</p>
               <p>{emk?.diagnosis.confirmed ? "МКБ подтвержден" : "МКБ ожидает подтверждения"}</p>
               <ul>{emk?.recommendations.map((item) => <li key={item}>{item}</li>)}</ul>
+              {emk?.final_summary && <p className="summary">{emk.final_summary}</p>}
             </section>
           </div>
         </section>
@@ -258,6 +281,44 @@ function EMKBlock({ title, items, fallback = [] }: { title: string; items?: stri
     <section className="panel">
       <h3>{title}</h3>
       {rows.length ? <ul>{rows.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="empty">-</p>}
+    </section>
+  );
+}
+
+function focusLabel(focus?: string): string {
+  if (focus === "dental") return "Стоматология 043/у";
+  if (focus === "lower_limb") return "Амбулаторный прием: нижние конечности";
+  return "Амбулаторный прием";
+}
+
+function DentalPanel({ emk }: { emk: NonNullable<VisitState["visit"]["emk"]> }) {
+  return (
+    <section className="panel">
+      <h3>Стоматология</h3>
+      <dl>
+        <dt>Зуб FDI</dt><dd>{emk.dental.tooth_fdi ?? "-"}</dd>
+        <dt>Одонтограмма</dt><dd>{emk.dental.odontogram_done ? "заполнена" : "-"}</dd>
+        <dt>Перкуссия</dt><dd>{emk.dental.percussion ?? "-"}</dd>
+        <dt>Термопроба</dt><dd>{emk.dental.thermal_test ?? "-"}</dd>
+        <dt>ЭОД</dt><dd>{emk.dental.eod_mka ? `${emk.dental.eod_mka} мкА` : "-"}</dd>
+      </dl>
+    </section>
+  );
+}
+
+function LowerLimbPanel({ emk }: { emk: NonNullable<VisitState["visit"]["emk"]> }) {
+  return (
+    <section className="panel">
+      <h3>Нижние конечности</h3>
+      <dl>
+        <dt>Сторона</dt><dd>{emk.lower_limb.side ?? "-"}</dd>
+        <dt>Область</dt><dd>{emk.lower_limb.location ?? "-"}</dd>
+        <dt>Отек</dt><dd>{emk.lower_limb.edema ?? "-"}</dd>
+        <dt>Кожа</dt><dd>{emk.lower_limb.skin_color ?? "-"} / {emk.lower_limb.skin_temperature ?? "-"}</dd>
+        <dt>Пульс стопы</dt><dd>{emk.lower_limb.dorsalis_pedis_pulse ?? "-"}</dd>
+        <dt>Чувств.</dt><dd>{emk.lower_limb.sensitivity ?? "-"}</dd>
+        <dt>Движения</dt><dd>{emk.lower_limb.movement ?? "-"}</dd>
+      </dl>
     </section>
   );
 }

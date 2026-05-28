@@ -6,6 +6,21 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
+class LowerLimbExam(BaseModel):
+    side: str | None = None
+    location: str | None = None
+    pain: str | None = None
+    edema: str | None = None
+    skin_color: str | None = None
+    skin_temperature: str | None = None
+    dorsalis_pedis_pulse: str | None = None
+    posterior_tibial_pulse: str | None = None
+    sensitivity: str | None = None
+    movement: str | None = None
+    trauma: str | None = None
+    walking_limit: str | None = None
+
+
 class DiagnosisCandidate(BaseModel):
     code: str | None = None
     title: str | None = None
@@ -29,15 +44,19 @@ class DentalExam(BaseModel):
 
 
 class EMK(BaseModel):
+    clinical_focus: str = "general"
+    age_years: int | None = None
     complaints: list[str] = Field(default_factory=list)
     anamnesis: list[str] = Field(default_factory=list)
     objective: list[str] = Field(default_factory=list)
     diagnosis: DiagnosisCandidate = Field(default_factory=DiagnosisCandidate)
     dental: DentalExam = Field(default_factory=DentalExam)
+    lower_limb: LowerLimbExam = Field(default_factory=LowerLimbExam)
     prescriptions: list[Prescription] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     allergy: str | None = None
     blood_pressure: str | None = None
+    final_summary: str | None = None
 
 
 class FindingOut(BaseModel):

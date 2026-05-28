@@ -44,6 +44,16 @@ export async function confirmVisit(visitId: string): Promise<Visit> {
   );
 }
 
+export async function finalizeVisit(visitId: string): Promise<VisitState> {
+  return parse<VisitState>(
+    await fetch(`${API_BASE}/api/visits/${visitId}/finalize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    })
+  );
+}
+
 export async function exportText(visitId: string, exportType: "json" | "html" | "1c"): Promise<ExportText> {
   return parse<ExportText>(await fetch(`${API_BASE}/api/visits/${visitId}/exports/${exportType}`));
 }

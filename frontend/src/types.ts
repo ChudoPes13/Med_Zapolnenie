@@ -23,16 +23,35 @@ export interface DentalExam {
   eod_mka: number | null;
 }
 
+export interface LowerLimbExam {
+  side: string | null;
+  location: string | null;
+  pain: string | null;
+  edema: string | null;
+  skin_color: string | null;
+  skin_temperature: string | null;
+  dorsalis_pedis_pulse: string | null;
+  posterior_tibial_pulse: string | null;
+  sensitivity: string | null;
+  movement: string | null;
+  trauma: string | null;
+  walking_limit: string | null;
+}
+
 export interface EMK {
+  clinical_focus: string;
+  age_years: number | null;
   complaints: string[];
   anamnesis: string[];
   objective: string[];
   diagnosis: DiagnosisCandidate;
   dental: DentalExam;
+  lower_limb: LowerLimbExam;
   prescriptions: Prescription[];
   recommendations: string[];
   allergy: string | null;
   blood_pressure: string | null;
+  final_summary: string | null;
 }
 
 export interface Finding {

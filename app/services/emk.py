@@ -37,11 +37,23 @@ def apply_emk_patch(current: dict[str, Any], patch: dict[str, Any]) -> dict[str,
         emk["allergy"] = allergy
     if blood_pressure := patch.get("blood_pressure"):
         emk["blood_pressure"] = blood_pressure
+    if clinical_focus := patch.get("clinical_focus"):
+        emk["clinical_focus"] = clinical_focus
+    if final_summary := patch.get("final_summary"):
+        emk["final_summary"] = final_summary
+    if patch.get("age_years") is not None:
+        emk["age_years"] = patch["age_years"]
 
     dental_patch = patch.get("dental") or {}
     if isinstance(dental_patch, dict):
         emk["dental"].update(
             {key: value for key, value in dental_patch.items() if value is not None}
+        )
+
+    lower_limb_patch = patch.get("lower_limb") or {}
+    if isinstance(lower_limb_patch, dict):
+        emk["lower_limb"].update(
+            {key: value for key, value in lower_limb_patch.items() if value is not None}
         )
 
     diagnosis_patch = patch.get("diagnosis") or {}

@@ -9,8 +9,9 @@ Greenfield MVP scaffolded in `C:\ai26\Med_Zapolnenie`:
 - Faster-Whisper and Silero wrappers with GPU-required startup.
 - Local `llama-server` client and deterministic dental extraction overlay.
 - KR stub provider for `KR 1021_1`.
-- Quality checker for 043/у.
+- Quality checker for profile-specific lower-limb and dental requirements.
 - React/Vite UI with AudioWorklet PCM streaming.
+- UI map in `docs/UI_MAP.md`.
 - JSON/HTML/1C/DOCX exports after doctor confirmation.
 
 ## Commands
@@ -36,6 +37,7 @@ npm run build
 ## Open Risks
 
 - Real KR database is not connected yet; provider returns visible stubs.
+- The UI no longer seeds dental text by default; `НК пример` is an explicit manual test helper.
 - `llama-server` model must be downloaded before LLM extraction is live.
 - ASR model download and first load can take time and VRAM; use `scripts\download_asr.ps1`.
 - Browser AudioContext sample rate is requested as 16 kHz; verify target Chrome honors it on the workstation.

@@ -35,3 +35,26 @@ def test_visit_lifecycle_requires_confirmation_before_export():
         exported = client.get(f"/api/visits/{visit_id}/exports/json")
         assert exported.status_code == 200
         assert exported.json()["export_type"] == "json"
+
+
+def test_lower_limb_visit_does_not_invent_tooth_from_age():
+    with TestClient(app) as client:
+        created = client.post("/api/visits", json={"patient_label": "lower-limb"}).json()
+        visit_id = created["id"]
+
+        state = client.post(
+            f"/api/visits/{visit_id}/transcript",
+            json={
+                "text": "У пациента боль в нижних конечностях. Ему 17 лет.",
+                "source": "test",
+            },
+        ).json()
+
+        emk = state["visit"]["emk"]
+        assert emk["clinical_focus"] == "lower_limb"
+        assert emk["age_years"] == 17
+        assert emk["dental"]["tooth_fdi"] is None
+        assert all("зуб" not in finding["code"] for finding in state["findings"])
+
+        finalized = client.post(f"/api/visits/{visit_id}/finalize").json()
+        assert finalized["visit"]["emk"]["final_summary"]

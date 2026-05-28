@@ -90,6 +90,14 @@ def confirm(
     return visit_to_out(visit)
 
 
+@router.post("/{visit_id}/finalize", response_model=VisitState)
+def finalize_recording(visit_id: str, session: Session = Depends(get_session)) -> VisitState:
+    try:
+        return processor.finalize_visit(session, visit_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="visit not found") from None
+
+
 def _export_payload(session: Session, visit_id: str) -> tuple[str, str, str]:
     visit = get_visit_or_raise(session, visit_id)
     if not visit.doctor_confirmed:

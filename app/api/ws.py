@@ -34,6 +34,15 @@ async def audio_ws(websocket: WebSocket, visit_id: str) -> None:
                     await websocket.send_json(
                         {"type": "state", "state": state.model_dump(mode="json")}
                     )
+                if payload.get("type") == "finalize_recording":
+                    with Session(engine) as session:
+                        state = processor.finalize_visit(session, visit_id)
+                    await websocket.send_json(
+                        {
+                            "type": "recording_finalized",
+                            "state": state.model_dump(mode="json"),
+                        }
+                    )
                 continue
 
             frame = message.get("bytes")
@@ -50,7 +59,7 @@ async def audio_ws(websocket: WebSocket, visit_id: str) -> None:
                     state = await processor.process_text(session, visit_id, text, "asr")
                 await websocket.send_json(
                     {
-                        "type": "final_transcript",
+                        "type": "segment_checked",
                         "text": text,
                         "state": state.model_dump(mode="json"),
                     }

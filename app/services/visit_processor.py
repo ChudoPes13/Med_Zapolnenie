@@ -12,6 +12,38 @@ from app.services.guidelines import GuidelinesProvider, StubGuidelinesProvider
 from app.services.quality import check_emk_quality
 
 
+def build_final_summary(transcript: list[str], emk: EMK) -> str:
+    parts = []
+    if emk.complaints:
+        parts.append(f"Жалобы: {'; '.join(emk.complaints)}")
+    if emk.age_years:
+        parts.append(f"Возраст: {emk.age_years} лет")
+    if emk.clinical_focus == "lower_limb":
+        lower = emk.lower_limb
+        parts.append(
+            "Нижние конечности: "
+            f"сторона {lower.side or '-'}, локализация {lower.location or '-'}, "
+            f"пульс стопы {lower.dorsalis_pedis_pulse or lower.posterior_tibial_pulse or '-'}, "
+            f"кожа {lower.skin_color or '-'} / {lower.skin_temperature or '-'}"
+        )
+    if emk.clinical_focus == "dental":
+        dental = emk.dental
+        parts.append(
+            "Стоматология: "
+            f"зуб {dental.tooth_fdi or '-'}, перкуссия {dental.percussion or '-'}, "
+            f"ЭОД {dental.eod_mka or '-'}"
+        )
+    if emk.blood_pressure:
+        parts.append(f"АД: {emk.blood_pressure}")
+    if emk.allergy:
+        parts.append(f"Аллергия: {emk.allergy}")
+    if emk.diagnosis.code:
+        parts.append(f"Диагноз: {emk.diagnosis.code} {emk.diagnosis.title or ''}".strip())
+    if parts:
+        return ". ".join(parts) + "."
+    return " ".join(transcript).strip()
+
+
 def visit_to_out(visit: Visit) -> VisitOut:
     return VisitOut(
         id=visit.id,
@@ -151,7 +183,7 @@ class VisitProcessor:
         visit.status = "draft"
 
         emk = EMK.model_validate(visit.emk)
-        findings = check_emk_quality(emk)
+        findings = check_emk_quality(emk, final=False)
         evidence = self.guidelines.search(emk, text)
         _replace_findings(session, visit_id, findings)
         _replace_evidence(session, visit_id, evidence)
@@ -161,6 +193,37 @@ class VisitProcessor:
                 visit_id=visit_id,
                 action="transcript.processed",
                 payload={"source": source, "text": text, "patch": patch},
+            )
+        )
+        session.add(visit)
+        session.commit()
+        return visit_state(session, visit_id)
+
+    def finalize_visit(self, session: Session, visit_id: str) -> VisitState:
+        visit = get_visit_or_raise(session, visit_id)
+        transcript_rows = session.exec(
+            select(TranscriptSegment)
+            .where(TranscriptSegment.visit_id == visit_id)
+            .order_by(TranscriptSegment.created_at)
+        ).all()
+        transcript = [row.text for row in transcript_rows]
+        emk = EMK.model_validate(visit.emk or initial_emk())
+        final_summary = build_final_summary(transcript, emk)
+        visit.emk = {**emk.model_dump(), "final_summary": final_summary}
+        visit.status = "ready_for_confirmation"
+        visit.doctor_confirmed = False
+        visit.updated_at = datetime.now(UTC)
+
+        emk = EMK.model_validate(visit.emk)
+        findings = check_emk_quality(emk, final=True)
+        evidence = self.guidelines.search(emk, " ".join(transcript))
+        _replace_findings(session, visit_id, findings)
+        _replace_evidence(session, visit_id, evidence)
+        session.add(
+            AuditEvent(
+                visit_id=visit_id,
+                action="recording.finalized",
+                payload={"summary": final_summary, "segments": len(transcript)},
             )
         )
         session.add(visit)

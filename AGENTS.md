@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a local, production-oriented assistant for Russian dental visits. The first vertical is стоматология 043/у: realtime transcript, EMK sections, quality findings, KR evidence, doctor confirmation, and export.
+Build a local, production-oriented assistant for Russian clinical visits. The current MVP supports general ambulatory flow, lower-limb complaints, and dental 043/у when the dialogue contains explicit dental context.
 
 ## Hard Rules
 
@@ -11,6 +11,8 @@ Build a local, production-oriented assistant for Russian dental visits. The firs
 - Live-write to MIS stays disabled until explicit doctor confirmation.
 - Every export and confirmation records an audit event.
 - Real KR retrieval is behind `GuidelinesProvider`; the v1 stub must stay visibly marked as `is_stub=true`.
+- Never infer a dental tooth number from age, shoe size, dates, or any number without explicit dental context.
+- Every VAD speech end is a segment check; recording stop/finalize is a full dialogue summary plus final check.
 
 ## Commit Policy
 
